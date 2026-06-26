@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rabbit Hole Mapper</title>
+    <style>
+      body {
+        width: 300px;
+        min-height: 200px;
+        font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+        font-size: 13px;
+        color: #1f2328;
+        margin: 0;
+        padding: 12px;
+        background: #fff;
+      }
+      h1 { font-size: 14px; font-weight: 600; margin: 0 0 12px; }
+      input {
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid #e5e7eb;
+        border-radius: 4px;
+        font-size: 12px;
+        outline: none;
+        box-sizing: border-box;
+        margin-bottom: 8px;
+      }
+      input:focus { border-color: #3b82d4; }
+      button {
+        width: 100%;
+        padding: 7px;
+        background: #1f2328;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      button:hover { background: #2d3238; }
+      button:disabled { opacity: 0.5; cursor: not-allowed; }
+      .status { font-size: 11px; color: #57606a; margin-top: 8px; text-align: center; }
+      .success { color: #22c55e; }
+      .error { color: #ef4444; }
+    </style>
+  </head>
+  <body>
+    <h1>Rabbit Hole Mapper</h1>
+    <input id="topic" placeholder="Topic (auto-filled from page title)" />
+    <button id="create-btn">New Rabbit Hole</button>
+    <div class="status" id="status"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>
