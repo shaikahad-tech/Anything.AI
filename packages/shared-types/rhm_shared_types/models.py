@@ -61,7 +61,7 @@ class RabbitHoleResponse(BaseModel):
     topic: str
     depth: int
     source_types: list[SourceType]
-    status: JobStatus
+    status: str  # plain string — DB stores arbitrary status values
     created_at: datetime
     updated_at: datetime
     node_count: int = 0

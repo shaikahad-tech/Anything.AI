@@ -40,8 +40,14 @@ class IngestionService:
         1. Expand the topic into search angles via LLM.
         2. Dispatch one Celery crawl job per (search_angle, source_type) pair.
         3. Record each job in PostgreSQL.
+        4. Update rabbit hole status to "running".
         """
         from workers.tasks.expansion import expand_topic_task
+
+        # Update rabbit hole status
+        rh = await self._db.get(RabbitHole, rabbit_hole_id)
+        if rh:
+            rh.status = "running"
 
         # Dispatch the expansion task — it will fan out crawl tasks itself
         task = expand_topic_task.apply_async(
