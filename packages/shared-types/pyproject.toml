@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rhm-shared-types"
+version = "0.1.0"
+description = "Shared Pydantic models for Rabbit Hole Mapper"
+requires-python = ">=3.11"
+dependencies = ["pydantic>=2.0", "pydantic-settings>=2.0"]
+
+[tool.setuptools.packages.find]
+include = ["rhm_shared_types*"]
