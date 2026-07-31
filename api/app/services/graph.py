@@ -7,6 +7,8 @@ This is a hard invariant enforced by code review and CI linting.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from app.db.neo4j_client import run_query
 from rhm_shared_types.models import (
     ContradictionPair,
@@ -246,7 +248,6 @@ def _raw_to_source_response(
     source_id: str, url: str, title: str | None, source_type: str, credibility: float | None
 ) -> SourceResponse:
     import uuid as _uuid
-    from datetime import datetime
     return SourceResponse(
         id=_uuid.UUID(source_id) if source_id else _uuid.uuid4(),
         url=url or "",
@@ -256,5 +257,5 @@ def _raw_to_source_response(
         published_at=None,
         credibility_score=credibility,
         bias_score=None,
-        retrieved_at=datetime.utcnow(),
+        retrieved_at=datetime.now(timezone.utc),
     )

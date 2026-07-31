@@ -7,7 +7,7 @@ from __future__ import annotations
 import io
 import json
 import zipfile
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import structlog
 
@@ -51,7 +51,7 @@ class ExportService:
         url = await self._upload_blob(blob_key, json.dumps(payload, indent=2).encode())
         return ExportResponse(
             download_url=url,
-            expires_at=datetime.utcnow() + timedelta(hours=1),
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
         )
 
     async def _export_obsidian(self, rh: RabbitHole) -> ExportResponse:
@@ -74,6 +74,7 @@ class ExportService:
                 if node.data.node_type.value in ("Person", "Organization", "Event"):
                     name = node.data.label
                     index_md += f"- [[{name}]]\n"
+
                     note = f"# {name}\n\n"
                     note += f"**Type:** {node.data.node_type.value}\n\n"
                     note += "## Claims\n\n"
@@ -92,7 +93,7 @@ class ExportService:
         url = await self._upload_blob(blob_key, buf.getvalue())
         return ExportResponse(
             download_url=url,
-            expires_at=datetime.utcnow() + timedelta(hours=1),
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
         )
 
     async def _export_pdf(self, rh: RabbitHole) -> ExportResponse:
