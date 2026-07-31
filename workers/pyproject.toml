@@ -11,6 +11,7 @@ pydantic = "^2.7"
 pydantic-settings = "^2.3"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0"}
 asyncpg = "^0.29"
+psycopg2-binary = "^2.9"
 neo4j = "^5.20"
 qdrant-client = "^1.9"
 anthropic = "^0.28"

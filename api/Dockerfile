@@ -19,10 +19,10 @@ RUN pip install --upgrade pip \
     && pip install -e /packages/shared-types \
     && pip install -e /packages/llm-prompts
 
-COPY apps/api/requirements.txt .
+COPY api/requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY apps/api /app
+COPY api /app
 
 EXPOSE 8000
 

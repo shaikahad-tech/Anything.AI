@@ -4,6 +4,7 @@ pydantic==2.7.4
 pydantic-settings==2.3.4
 sqlalchemy[asyncio]==2.0.31
 asyncpg==0.29.0
+psycopg2-binary==2.9.9
 neo4j==5.20.0
 qdrant-client==1.9.2
 anthropic==0.28.1

@@ -12,7 +12,7 @@ from __future__ import annotations
 import hashlib
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -46,9 +46,7 @@ def crawl_article_task(
     depth: int = 1,
 ) -> dict:
     import asyncio
-    return asyncio.get_event_loop().run_until_complete(
-        _crawl_article_async(self, rabbit_hole_id, query, depth)
-    )
+    return asyncio.run(_crawl_article_async(self, rabbit_hole_id, query, depth))
 
 
 async def _crawl_article_async(task, rabbit_hole_id: str, query: str, depth: int) -> dict:
@@ -72,10 +70,10 @@ async def _crawl_article_async(task, rabbit_hole_id: str, query: str, depth: int
 
                 # Store raw HTML in S3
                 blob_key = f"blobs/{rabbit_hole_id}/{hashlib.sha256(url.encode()).hexdigest()}.html"
-                await upload_blob(blob_key, raw_html.encode())
+                await upload_blob_async(blob_key, raw_html.encode())
 
                 source_id = str(uuid.uuid4())
-                await insert_source({
+                await insert_source_async({
                     "id": source_id,
                     "rabbit_hole_id": rabbit_hole_id,
                     "url": url,
@@ -96,7 +94,7 @@ async def _crawl_article_async(task, rabbit_hole_id: str, query: str, depth: int
                         "url": url,
                         "source_type": "article",
                     },
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 })
 
                 # Dispatch extraction
@@ -236,3 +234,20 @@ async def _playwright_fetch(url: str) -> tuple[str, str, dict]:
             return html, text[:50000], {"title": title}
         finally:
             await browser.close()
+
+
+# ---------------------------------------------------------------------------
+# Async wrappers for sync utils (crawl_article runs in asyncio.run)
+# ---------------------------------------------------------------------------
+
+
+async def upload_blob_async(key: str, data: bytes) -> str:
+    """Run sync S3 upload in a thread to avoid blocking the event loop."""
+    import asyncio
+    return await asyncio.get_event_loop().run_in_executor(None, upload_blob, key, data)
+
+
+async def insert_source_async(data: dict) -> None:
+    """Run sync DB insert in a thread to avoid blocking the event loop."""
+    import asyncio
+    await asyncio.get_event_loop().run_in_executor(None, insert_source, data)

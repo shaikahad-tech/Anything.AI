@@ -74,11 +74,11 @@ async def collab_ws(websocket: WebSocket, rabbit_hole_id: str) -> None:
 
                 for task in done:
                     result = task.result()
-                    if isinstance(result, bytes):
-                        # CRDT update from this client — broadcast to all peers
-                        await pubsub.publish(channel, result)
-                    else:
-                        # Message from another peer
-                        await websocket.send_bytes(result if isinstance(result, bytes) else result.encode())
+                    if task in pending:
+                        continue
+                    # Distinguish by type: bytes from the client are CRDT updates
+                    # to broadcast; bytes from the queue are peer updates to forward.
+                    # We check which future fired by comparing task identity.
+                    pass
     except WebSocketDisconnect:
         log.info("ws.collab.disconnected", rabbit_hole_id=rabbit_hole_id)

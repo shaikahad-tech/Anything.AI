@@ -92,9 +92,8 @@ services:
 
   api:
     build:
-      # Build context is repo root so Dockerfile can COPY packages/
       context: ../..
-      dockerfile: apps/api/Dockerfile
+      dockerfile: api/Dockerfile
     restart: unless-stopped
     env_file:
       - ../../.env
@@ -110,7 +109,7 @@ services:
       qdrant:
         condition: service_healthy
     volumes:
-      - ../../apps/api:/app
+      - ../../api:/app
       - ../../packages:/packages
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
@@ -119,7 +118,7 @@ services:
   worker-crawler:
     build:
       context: ../..
-      dockerfile: apps/workers/Dockerfile
+      dockerfile: workers/Dockerfile
     restart: unless-stopped
     env_file:
       - ../../.env
@@ -132,13 +131,13 @@ services:
       neo4j:
         condition: service_healthy
     volumes:
-      - ../../apps/workers:/app
+      - ../../workers:/app
       - ../../packages:/packages
 
   worker-extraction:
     build:
       context: ../..
-      dockerfile: apps/workers/Dockerfile
+      dockerfile: workers/Dockerfile
     restart: unless-stopped
     env_file:
       - ../../.env
@@ -151,13 +150,13 @@ services:
       neo4j:
         condition: service_healthy
     volumes:
-      - ../../apps/workers:/app
+      - ../../workers:/app
       - ../../packages:/packages
 
   worker-contradiction:
     build:
       context: ../..
-      dockerfile: apps/workers/Dockerfile
+      dockerfile: workers/Dockerfile
     restart: unless-stopped
     env_file:
       - ../../.env
@@ -168,13 +167,13 @@ services:
       neo4j:
         condition: service_healthy
     volumes:
-      - ../../apps/workers:/app
+      - ../../workers:/app
       - ../../packages:/packages
 
   celery-beat:
     build:
       context: ../..
-      dockerfile: apps/workers/Dockerfile
+      dockerfile: workers/Dockerfile
     restart: unless-stopped
     env_file:
       - ../../.env
@@ -192,22 +191,6 @@ services:
       - "5555:5555"
     depends_on:
       - redis
-
-  # ─── Frontend ────────────────────────────────────────────────────────────────
-
-  web:
-    build:
-      context: ../../apps/web
-      dockerfile: Dockerfile.dev
-    restart: unless-stopped
-    env_file:
-      - ../../.env
-    ports:
-      - "3000:3000"
-    volumes:
-      - ../../apps/web:/app
-      - /app/node_modules
-    command: npm run dev
 
 volumes:
   postgres_data:
