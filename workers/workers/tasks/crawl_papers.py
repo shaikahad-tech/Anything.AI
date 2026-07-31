@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 import arxiv
 import httpx
@@ -72,7 +72,7 @@ def crawl_papers_task(
                 "type": "node_added",
                 "rabbit_hole_id": rabbit_hole_id,
                 "payload": {"id": source_id, "type": "sourceNode", "label": paper.title, "url": url, "source_type": "paper"},
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             })
 
             extraction_task.apply_async(

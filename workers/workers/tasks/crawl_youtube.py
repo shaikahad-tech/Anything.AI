@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 import structlog
 from googleapiclient.discovery import build
@@ -113,7 +113,7 @@ def crawl_youtube_task(
                     "url": url,
                     "source_type": "youtube",
                 },
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             })
 
             extraction_task.apply_async(

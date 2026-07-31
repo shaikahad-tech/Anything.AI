@@ -13,6 +13,7 @@ import json
 import os
 import uuid
 from collections import defaultdict
+from datetime import datetime, timezone
 
 import anthropic
 import structlog
@@ -137,10 +138,9 @@ def timeline_task(self, rabbit_hole_id: str) -> dict:
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=30))
 def _extract_temporal(claims: list[dict]) -> list[dict]:
-    from datetime import datetime
     from rhm_llm_prompts.prompts import TEMPORAL_EXTRACTION_V1
     prompt = TEMPORAL_EXTRACTION_V1.format(
-        retrieved_at=datetime.utcnow().isoformat(),
+        retrieved_at=datetime.now(timezone.utc).isoformat(),
         claims_json=json.dumps(claims, indent=2),
     )
 

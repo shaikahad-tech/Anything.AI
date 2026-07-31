@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 import praw
 import structlog
@@ -76,7 +76,7 @@ def crawl_reddit_task(
                     "source_type": "reddit",
                     "title": submission.title,
                     "author": str(submission.author) if submission.author else None,
-                    "published_at": datetime.utcfromtimestamp(submission.created_utc).isoformat(),
+                    "published_at": datetime.fromtimestamp(submission.created_utc, tz=timezone.utc).isoformat(),
                     "s3_blob_key": blob_key,
                 })
 
@@ -90,7 +90,7 @@ def crawl_reddit_task(
                         "url": url,
                         "source_type": "reddit",
                     },
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 })
 
                 extraction_task.apply_async(
@@ -100,7 +100,7 @@ def crawl_reddit_task(
                         "url": url,
                         "text": full_text,
                         "source_type": "reddit",
-                        "published_at": datetime.utcfromtimestamp(submission.created_utc).isoformat(),
+                        "published_at": datetime.fromtimestamp(submission.created_utc, tz=timezone.utc).isoformat(),
                     },
                     queue="extraction",
                 )
