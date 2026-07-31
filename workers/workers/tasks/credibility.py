@@ -18,16 +18,16 @@ from urllib.parse import urlparse
 
 import structlog
 from neo4j import GraphDatabase
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 
 from workers.celery_app import app
+from workers.utils.db import _get_engine
 
 log = structlog.get_logger(__name__)
 
 NEO4J_URI = os.environ.get("NEO4J_URI", "bolt://localhost:7687")
 NEO4J_USER = os.environ.get("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD", "rabbitholepass")
-SYNC_DATABASE_URL = os.environ.get("SYNC_DATABASE_URL", "postgresql://rhm:rhm@localhost:5432/rabbithole")
 
 # Domain reputation tiers (0.0–1.0)
 DOMAIN_TIERS: dict[str, float] = {
@@ -112,11 +112,12 @@ def _extract_domain(url: str) -> str:
 
 
 def _update_source_credibility(source_id: str, score: float) -> None:
-    engine = create_engine(SYNC_DATABASE_URL)
+    # Use the shared engine from workers.utils.db — avoids creating a new
+    # engine on every call (was a resource leak).
+    engine = _get_engine()
     with engine.connect() as conn:
         conn.execute(
             text("UPDATE sources SET credibility_score = :score WHERE id = :id::uuid"),
             {"score": score, "id": source_id},
         )
         conn.commit()
-    engine.dispose()

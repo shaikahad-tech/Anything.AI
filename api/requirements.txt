@@ -16,3 +16,7 @@ opentelemetry-exporter-otlp==1.24.0
 structlog==24.2.0
 celery[redis]==5.4.0
 python-multipart==0.0.9
+anthropic==0.28.1
+qdrant-client==1.9.2
+neo4j==5.20.0
+boto3==1.34.144

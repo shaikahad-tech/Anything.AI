@@ -22,6 +22,7 @@ from rhm_shared_types.models import (
     GraphResponse,
     RabbitHoleCreate,
     RabbitHoleResponse,
+    SourceType,
     TimelineResponse,
 )
 
@@ -169,14 +170,12 @@ async def _get_owned_rh(
 
 
 def _to_response(rh: RabbitHole) -> RabbitHoleResponse:
-    from rhm_shared_types.models import JobStatus, SourceType
-
     return RabbitHoleResponse(
         id=rh.id,
         topic=rh.topic,
         depth=rh.depth,
         source_types=[SourceType(st) for st in rh.source_types],
-        status=JobStatus(rh.status),
+        status=rh.status,  # plain string — avoids JobStatus enum mismatch
         created_at=rh.created_at,
         updated_at=rh.updated_at,
         node_count=rh.node_count,

@@ -28,25 +28,24 @@ async def rabbit_hole_ws(websocket: WebSocket, rabbit_hole_id: str) -> None:
     try:
         async with pubsub.subscribe(channel) as queue:
             while True:
-                # Fan out messages from Redis pub/sub to the WebSocket.
-                # Also check for pings from the client so the connection stays alive.
+                queue_task = asyncio.ensure_future(queue.get())
+                recv_task = asyncio.ensure_future(websocket.receive_text())
                 done, pending = await asyncio.wait(
-                    [
-                        asyncio.ensure_future(queue.get()),
-                        asyncio.ensure_future(websocket.receive_text()),
-                    ],
+                    [queue_task, recv_task],
                     return_when=asyncio.FIRST_COMPLETED,
                 )
                 for task in pending:
                     task.cancel()
 
-                for task in done:
-                    result = task.result()
-                    if isinstance(result, str):
-                        # Client ping — acknowledge
-                        await websocket.send_text(json.dumps({"type": "pong"}))
+                if recv_task in done:
+                    # Client ping — acknowledge
+                    await websocket.send_text(json.dumps({"type": "pong"}))
+
+                if queue_task in done:
+                    result = queue_task.result()
+                    if isinstance(result, bytes):
+                        await websocket.send_text(result.decode("utf-8", errors="replace"))
                     else:
-                        # Redis message — forward to client
                         await websocket.send_text(result)
     except WebSocketDisconnect:
         log.info("ws.graph.disconnected", rabbit_hole_id=rabbit_hole_id)
@@ -62,23 +61,26 @@ async def collab_ws(websocket: WebSocket, rabbit_hole_id: str) -> None:
     try:
         async with pubsub.subscribe(channel) as queue:
             while True:
+                queue_task = asyncio.ensure_future(queue.get())
+                recv_task = asyncio.ensure_future(websocket.receive_bytes())
                 done, pending = await asyncio.wait(
-                    [
-                        asyncio.ensure_future(queue.get()),
-                        asyncio.ensure_future(websocket.receive_bytes()),
-                    ],
+                    [queue_task, recv_task],
                     return_when=asyncio.FIRST_COMPLETED,
                 )
                 for task in pending:
                     task.cancel()
 
-                for task in done:
-                    result = task.result()
-                    if task in pending:
-                        continue
-                    # Distinguish by type: bytes from the client are CRDT updates
-                    # to broadcast; bytes from the queue are peer updates to forward.
-                    # We check which future fired by comparing task identity.
-                    pass
+                if recv_task in done:
+                    # CRDT update from this client — broadcast to all peers
+                    client_data = recv_task.result()
+                    await pubsub.publish(channel, client_data)
+
+                if queue_task in done:
+                    # Message from another peer — forward to this client
+                    peer_data = queue_task.result()
+                    if isinstance(peer_data, bytes):
+                        await websocket.send_bytes(peer_data)
+                    else:
+                        await websocket.send_bytes(peer_data.encode())
     except WebSocketDisconnect:
         log.info("ws.collab.disconnected", rabbit_hole_id=rabbit_hole_id)
